@@ -90,6 +90,7 @@ def play(player1, player2, log_level, port, address, gui, record, gui_path, conf
     if record :
         listeners.append(StateRecorder())
     master.record_game(listeners=listeners)
+    return master
 
 if __name__=="__main__":
 
