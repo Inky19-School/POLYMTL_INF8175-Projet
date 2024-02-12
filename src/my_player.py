@@ -4,6 +4,7 @@ from seahorse.game.action import Action
 from seahorse.game.game_state import GameState
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
+import random
 
 class MyPlayer(PlayerAbalone):
     """
@@ -36,5 +37,8 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
-        #TODO
-        raise MethodNotImplementedError()
+        possible_actions = current_state.get_possible_actions()
+        random.seed("seahorse")
+        if kwargs:
+            pass
+        return random.choice(list(possible_actions))
