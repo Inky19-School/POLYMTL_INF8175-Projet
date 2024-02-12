@@ -37,6 +37,7 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
+        #Je teste git
         possible_actions = current_state.get_possible_actions()
         random.seed("seahorse")
         if kwargs:
