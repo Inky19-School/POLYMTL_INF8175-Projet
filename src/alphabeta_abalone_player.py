@@ -1,3 +1,4 @@
+from board_abalone import BoardAbalone
 from player_abalone import PlayerAbalone
 from game_state_abalone import GameStateAbalone
 from seahorse.game.action import Action
@@ -8,6 +9,9 @@ import math
 import typing
 
 import random
+from seahorse.game.game_layout.board import Piece
+
+from utils import DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -17,7 +21,7 @@ class MyPlayer(PlayerAbalone):
         piece_type (str): piece type of the player
     """
 
-    def __init__(self, piece_type: str, name: str = "minimax", time_limit: float=60*15, max_depth:int=2, *args) -> None:
+    def __init__(self, piece_type: str, name: str = "alphabeta", time_limit: float=60*15, max_depth:int=2, *args) -> None:
         """
         Initialize the PlayerAbalone instance.
 
@@ -28,6 +32,7 @@ class MyPlayer(PlayerAbalone):
         """
         super().__init__(piece_type,name,time_limit,*args)
         self.max_depth = max_depth
+        self.ennemy_id:PlayerAbalone = None
     
     def heuristic(self, state: GameStateAbalone) -> float:
         """
@@ -44,36 +49,71 @@ class MyPlayer(PlayerAbalone):
         # - billes en danger
         # - bille adversaire en danger
         # notes: pour être admissible, entre -6 et 6. Préférable -2 et 2 (l'adversaire va forcèment marquer des points)
-        return state.scores[self.id]
+        board: BoardAbalone = state.get_rep()
+        score = 0
+        # current_player_pieces = board.get_pieces_player(state.get_next_player())
+        next_player = self.id
+        grid = board.get_grid()
+        # print(state.get_next_player().name)
+
+        distance_score = 0
+        dim = board.get_dimensions()
+        nb_pieces = 0
+        for i in range(dim[0]):
+            for j in range(dim[1]):
+                if board.get_env().get((i, j), -1) != -1:
+                    piece:Piece = board.get_env().get((i, j))
+                    if piece.get_owner_id() == next_player:
+                        distance_score += (8-DANGER.get((i,j)))
+                        nb_pieces += 1
+                        #print(f"Player piece {i},{j}")
+
+        # todo: REFACTOR NORMALISATION
+        score = (distance_score/(nb_pieces*8))
+        ennemy_pieces = board.get_pieces_player(self.ennemy_id)
+        own_pieces = board.get_pieces_player(state.get_next_player())
+        return score - ennemy_pieces[0]/14 + own_pieces[0]/14
     
-    def max_value(self, state:GameStateAbalone, depth:int) -> typing.Tuple[float, Action]:
+    def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
+            # print("=========")
+            # print("JOUEUR")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
+        _alpha = alpha
         value = -math.inf
         move = None
         for m in moves:
             new_state = m.get_next_game_state()
-            (new_value, _) = self.min_value(new_state, depth+1)
+            (new_value, _) = self.min_value(new_state, depth+1, _alpha, beta)
             if new_value > value:
                 value = new_value
+                _alpha = value
                 move = m
+                if value > beta:
+                    return (value, move)
         return (value, move)
     
-    def min_value(self, state:GameStateAbalone, depth:int) -> typing.Tuple[float, Action]:
+    def min_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
+            print("=========")
+            print("ADVERSAIRE")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
+        _beta = beta
         value = math.inf
         move = None
         for m in moves:
             new_state = m.get_next_game_state()
-            (new_value, _) = self.max_value(new_state, depth+1)
+            (new_value, _) = self.max_value(new_state, depth+1, alpha, _beta)
             if new_value < value:
                 value = new_value
+                _beta = value
                 move = m
+                if value < alpha:
+                    return (value, move)
         return (value, move)
 
 
@@ -88,5 +128,14 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
-        (_, action) = self.max_value(current_state, 0)
+        print("BEGIN")
+        print(current_state.get_next_player().name)
+
+        players = current_state.get_players()
+        if players[0].get_id() == self.id:
+            self.ennemy_id = players[1]
+        else:
+            self.ennemy_id = players[0]
+
+        (_, action) = self.max_value(current_state, 0, -math.inf, math.inf)
         return action
