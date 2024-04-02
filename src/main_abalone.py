@@ -4,6 +4,7 @@ import os
 from os.path import basename, splitext, dirname
 import platform
 import sys
+from typing import List
 
 from loguru import logger
 from board_abalone import BoardAbalone
@@ -16,6 +17,14 @@ from seahorse.utils.recorders import StateRecorder
 from seahorse.game.game_layout.board import Piece
 from seahorse.utils.custom_exceptions import PlayerDuplicateError
 from argparse import RawTextHelpFormatter
+
+
+def add_win(winner:PlayerAbalone, player1:PlayerAbalone, player2:PlayerAbalone, win:List[int]) -> List[int]:
+    if winner.get_id() == player1.get_id():
+        win[0] += 1
+    elif winner.get_id() == player2.get_id():
+        win[1] += 1
+    return win
 
 def play(player1, player2, log_level, port, address, gui, record, gui_path, config) :
     list_players = [player1, player2]
@@ -107,7 +116,7 @@ if __name__=="__main__":
     parser.add_argument("-t","--type",
                         required=True,
                         type=str, 
-                        choices=["local", "host_game", "connect", "human_vs_computer", "human_vs_human"],
+                        choices=["local", "host_game", "connect", "human_vs_computer", "human_vs_human", "local_repeat"],
                         help="\nThe execution mode you want.\n" 
                              +" - local: Runs everything on you machine\n"
                              +" - host_game: Runs a single player on your machine and waits for an opponent to connect with the 'connect' node.\n\t      You must provide an external ip for the -a argument (use 'ipconfig').\n"
@@ -122,6 +131,7 @@ if __name__=="__main__":
     parser.add_argument("-g","--no-gui",action='store_false',default=True, help="Headless mode\n\n")
     parser.add_argument("-r","--record",action="store_true",default=False, help="Stores the succesive game states in a json file.\n\n")
     parser.add_argument("-l","--log",required=False,choices=["DEBUG","INFO"], default="DEBUG",help="\nSets the logging level.")
+    parser.add_argument("-n","--number",required=False,type=int, default=1, help="Number of loop for 'local_repeat'.\n\n")
     parser.add_argument("players_list",nargs="*", help='The players')
     args=parser.parse_args()
 
@@ -133,6 +143,7 @@ if __name__=="__main__":
     log_level = vars(args).get("log")
     list_players = vars(args).get("players_list")
     base_config = vars(args).get("config")
+    n_loop = vars(args).get("number")
     time_limit = 15*60
 
     gui_path = os.path.join(dirname(os.path.abspath(__file__)),'GUI','index.html')
@@ -146,7 +157,8 @@ if __name__=="__main__":
         player2_class = __import__(splitext(basename(list_players[1]))[0], fromlist=[None])
         player1 = player1_class.MyPlayer("W", name=splitext(basename(list_players[0]))[0]+"_1", time_limit=time_limit)
         player2 = player2_class.MyPlayer("B", name=splitext(basename(list_players[1]))[0]+"_2", time_limit=time_limit)
-        play(player1=player1, player2=player2, log_level=log_level, port=port, address=address, gui=gui, record=record, gui_path=gui_path, config=base_config)
+        game = play(player1=player1, player2=player2, log_level=log_level, port=port, address=address, gui=gui, record=record, gui_path=gui_path, config=base_config)
+        print("Scores are ", game.get_scores())
     elif type == "host_game" :
         folder = dirname(list_players[0])
         sys.path.append(folder)
@@ -178,4 +190,45 @@ if __name__=="__main__":
         player2 = InteractivePlayerProxy(PlayerAbalone("B", name="alice", time_limit=time_limit))
         player2.share_sid(player1)
         play(player1=player1, player2=player2, log_level=log_level, port=port, address=address, gui=False, record=record, gui_path=gui_path, config=base_config)
-        
+    elif type == "local_repeat" :
+        folder = dirname(list_players[0])
+        sys.path.append(folder)
+        player1_class = __import__(splitext(basename(list_players[0]))[0], fromlist=[None])
+        folder = dirname(list_players[1])
+        sys.path.append(folder)
+        player2_class = __import__(splitext(basename(list_players[1]))[0], fromlist=[None])
+        classic_wb = [0,0]
+        classic_bw = [0,0]
+        alien_wb = [0,0]
+        alien_bw = [0,0]
+
+        for i in range(n_loop):
+            player1 = player1_class.MyPlayer("W", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
+            player2 = player2_class.MyPlayer("B", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
+            current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="classic")
+            total_win = add_win(current_round.get_winner()[0], player1, player2, classic_wb)
+        for i in range(n_loop):
+            player1 = player1_class.MyPlayer("B", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
+            player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
+            current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="classic")
+            total_win = add_win(current_round.get_winner()[0], player1, player2, classic_bw)
+        for i in range(n_loop):
+            player1 = player1_class.MyPlayer("W", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
+            player2 = player2_class.MyPlayer("B", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
+            current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="alien")
+            total_win = add_win(current_round.get_winner()[0], player1, player2, alien_bw)
+        for i in range(n_loop):
+            player1 = player1_class.MyPlayer("B", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
+            player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
+            current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="alien")
+            total_win = add_win(current_round.get_winner()[0], player1, player2, alien_wb)
+
+        total_classic = [classic_wb[0]+classic_bw[0], classic_wb[1]+classic_bw[1]]
+        total_alien = [alien_wb[0]+alien_bw[0], alien_wb[1]+alien_bw[1]]
+        total_win = [total_classic[0]+total_alien[0], total_classic[1]+total_alien[1]]
+        print("Total wins are ", total_win)
+        script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+        files=os.listdir(script_directory)
+        for file in files:
+            if file.startswith("r_"):
+                os.remove(file)
