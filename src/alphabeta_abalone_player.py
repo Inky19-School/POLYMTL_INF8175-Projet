@@ -6,6 +6,7 @@ from seahorse.game.action import Action
 from seahorse.game.game_state import GameState
 from seahorse.game.action import Action
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
+import scipy.stats
 import math
 import typing
 
@@ -59,8 +60,8 @@ class MyPlayer(PlayerAbalone):
 
         distance_score_ally:int = 0
         distance_score_ennemy:int = 0
-        edge_score:int = 0
         threat_score:int = 0
+        cluster_score:int = 0
 
         step_factor:int = state.get_step() / state.max_step
 
@@ -70,36 +71,64 @@ class MyPlayer(PlayerAbalone):
         
         for i, j in itertools.product(range(dim[0]), range(dim[1])):
             in_danger:bool = False
+            on_edge:bool = False
             _piece = board.get_env().get((i, j), -1)
             if _piece == -1:
                 continue
             piece:Piece = _piece
-            is_ally = piece.get_owner_id() == next_player
+            is_ally = piece.get_owner_id() == self.id
 
             neighbours = board.get_neighbours(i, j)
             for _, (type, (nx, ny)) in neighbours.items():
                 if type == "EMPTY":
                     continue
                 elif type == "OUTSIDE":
-                    edge_score += -1 if is_ally else 1
-                    in_danger = True
+                    on_edge = True
                 elif board.get_env().get((nx, ny), piece).get_owner_id() != self.id:
-                    threat_score += 1
-            if (in_danger):
-                threat_score += 2
+                    in_danger = True
+                else:
+                    cluster_score += 0.5
+
+            if (in_danger and on_edge):
+                threat_score += 1
 
             if piece.get_owner_id() == next_player:
-                distance_score_ally += (MAX_DANGER-DANGER.get((i,j)))
+                distance_score_ally += DANGER.get((i,j))
                 nb_pieces_ally += 1
             else:
                 distance_score_ennemy += DANGER.get((i,j))
                 nb_pieces_ennemy += 1
-
+        
+        center = board.get_env().get((8, 4), -1)
+        center_score = 0
+        if center != -1:
+            center_score += 1 if center.get_owner_id() == self.id else -1
         # todo: REFACTOR NORMALISATION
         nb_pieces:int = nb_pieces_ally + nb_pieces_ennemy
-        score = (distance_score_ally/(nb_pieces_ally*MAX_DANGER)) * (1-step_factor)
-        score += (distance_score_ennemy/(nb_pieces_ally*MAX_DANGER))*0.5 * (1-step_factor)
-        return score - (nb_pieces_ennemy/14)*step_factor + nb_pieces_ally/14 #+ edge_score + threat_score
+
+        # Base score [-6, 6]
+        player_score = state.get_player_score(state.get_players()[self.index])
+        player_score = player_score/6 # [-1, 1]
+        
+        # Distance of the pieces to the center
+        distance_score_ally_normalized = (distance_score_ally - 20) / 104
+        distance_score_ennemy_normalized = (distance_score_ennemy - 20) / 104
+        # [-1, 1]
+        distance_score = (distance_score_ennemy_normalized - distance_score_ally_normalized) * (1-step_factor)
+        
+        # Threat score [-1, 0]
+        threat_score = -threat_score/14 * step_factor
+
+        # Center score [-1, 1]
+        center_score = center_score if state.step < 45 else 0
+
+        # Cluster score [0, 1]
+        cluster_score = cluster_score/27 * scipy.stats.norm(20, 5).pdf(state.step)*10
+
+        score = player_score + distance_score + threat_score + center_score + cluster_score*0.5 + nb_pieces_ally/14 - nb_pieces_ennemy/14
+        return score
+
+        return score - (nb_pieces_ennemy/14)*step_factor*2 + nb_pieces_ally/14 + threat_score/10 + edge_score/14 + center_score + cluster_score/(nb_pieces_ally*6)*0.5
     
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:

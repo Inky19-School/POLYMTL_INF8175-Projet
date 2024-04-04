@@ -1,4 +1,3 @@
-import itertools
 from board_abalone import BoardAbalone
 from player_abalone import PlayerAbalone
 from game_state_abalone import GameStateAbalone
@@ -12,7 +11,7 @@ import typing
 import random
 from seahorse.game.game_layout.board import Piece
 
-from utils import DANGER, MAX_DANGER
+from utils import DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -22,7 +21,7 @@ class MyPlayer(PlayerAbalone):
         piece_type (str): piece type of the player
     """
 
-    def __init__(self, piece_type: str, name: str = "alphabeta", time_limit: float=60*15, max_depth:int=2, *args) -> None:
+    def __init__(self, piece_type: str, name: str = "alphabeta2", time_limit: float=60*15, max_depth:int=2, *args) -> None:
         """
         Initialize the PlayerAbalone instance.
 
@@ -33,8 +32,7 @@ class MyPlayer(PlayerAbalone):
         """
         super().__init__(piece_type,name,time_limit,*args)
         self.max_depth = max_depth
-        self.ennemy_index = None
-        self.index = None
+        self.ennemy_id = None
     
     def heuristic(self, state: GameStateAbalone) -> float:
         """
@@ -56,51 +54,29 @@ class MyPlayer(PlayerAbalone):
         # current_player_pieces = board.get_pieces_player(state.get_next_player())
         next_player = self.id
         grid = board.get_grid()
+        # print(state.get_next_player().name)
 
-        distance_score_ally:int = 0
-        distance_score_ennemy:int = 0
-        edge_score:int = 0
-        threat_score:int = 0
-
-        step_factor:int = state.get_step() / state.max_step
-
-        dim:list[int] = board.get_dimensions()
-        nb_pieces_ally:int = 0
-        nb_pieces_ennemy:int = 0
-        
-        for i, j in itertools.product(range(dim[0]), range(dim[1])):
-            in_danger:bool = False
-            _piece = board.get_env().get((i, j), -1)
-            if _piece == -1:
-                continue
-            piece:Piece = _piece
-            is_ally = piece.get_owner_id() == next_player
-
-            neighbours = board.get_neighbours(i, j)
-            for _, (type, (nx, ny)) in neighbours.items():
-                if type == "EMPTY":
-                    continue
-                elif type == "OUTSIDE":
-                    edge_score += -1 if is_ally else 1
-                    in_danger = True
-                elif board.get_env().get((nx, ny), piece).get_owner_id() != self.id:
-                    threat_score += 1
-            if (in_danger):
-                threat_score += 2
-
-            if piece.get_owner_id() == next_player:
-                distance_score_ally += (MAX_DANGER-DANGER.get((i,j)))
-                nb_pieces_ally += 1
-            else:
-                distance_score_ennemy += DANGER.get((i,j))
-                nb_pieces_ennemy += 1
+        distance_score_ally = 0
+        distance_score_ennemy = 0
+        dim = board.get_dimensions()
+        nb_pieces_ally = 0
+        for i in range(dim[0]):
+            for j in range(dim[1]):
+                if board.get_env().get((i, j), -1) != -1:
+                    piece:Piece = board.get_env().get((i, j))
+                    if piece.get_owner_id() == next_player:
+                        distance_score_ally += (8-DANGER.get((i,j)))
+                        nb_pieces_ally += 1
+                    else :
+                        distance_score_ennemy += DANGER.get((i,j))
+                        #print(f"Player piece {i},{j}")
 
         # todo: REFACTOR NORMALISATION
-        nb_pieces:int = nb_pieces_ally + nb_pieces_ennemy
-        player_score = state.get_player_score(state.get_players()[self.index])
-        score = (distance_score_ally/(nb_pieces_ally*MAX_DANGER)) * (1-step_factor)
-        score += (distance_score_ennemy/(nb_pieces_ally*MAX_DANGER))*0.5 * (1-step_factor)
-        return score - (nb_pieces_ennemy/14)*step_factor + nb_pieces_ally/14 #+ edge_score + threat_score
+        score = (distance_score_ally/(nb_pieces_ally*8))
+        #score += (distance_score_ennemy/(nb_pieces_ally*8))*0.5
+        ennemy_pieces = board.get_pieces_player(state.get_players()[self.ennemy_id])
+        own_pieces = board.get_pieces_player(state.get_next_player())
+        return score - ennemy_pieces[0]/14 + own_pieces[0]/14
     
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
@@ -156,14 +132,14 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
+        print("BEGIN")
+        print(current_state.get_next_player().name)
 
         players = current_state.get_players()
         if players[0].get_id() == self.id:
-            self.ennemy_index = 1
-            self.index = 0
+            self.ennemy_id = 1
         else:
-            self.ennemy_index = 0
-            self.index = 1
+            self.ennemy_id = 0
 
         (_, action) = self.max_value(current_state, 0, -math.inf, math.inf)
         return action
