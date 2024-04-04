@@ -6,14 +6,13 @@ from seahorse.game.action import Action
 from seahorse.game.game_state import GameState
 from seahorse.game.action import Action
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
-import scipy.stats
 import math
 import typing
 
 import random
 from seahorse.game.game_layout.board import Piece
 
-from utils import DANGER, MAX_DANGER
+from utils import CLUSTER_STEP_FACTOR, DANGER, MAX_DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -23,7 +22,7 @@ class MyPlayer(PlayerAbalone):
         piece_type (str): piece type of the player
     """
 
-    def __init__(self, piece_type: str, name: str = "alphabeta", time_limit: float=60*15, max_depth:int=2, *args) -> None:
+    def __init__(self, piece_type: str, name: str = "alphabeta", time_limit: float=60*15, *args) -> None:
         """
         Initialize the PlayerAbalone instance.
 
@@ -33,7 +32,7 @@ class MyPlayer(PlayerAbalone):
             time_limit (float, optional): the time limit in (s)
         """
         super().__init__(piece_type,name,time_limit,*args)
-        self.max_depth = max_depth
+        self.max_depth = 3
         self.ennemy_index = None
         self.index = None
     
@@ -123,7 +122,7 @@ class MyPlayer(PlayerAbalone):
         center_score = center_score if state.step < 45 else 0
 
         # Cluster score [0, 1]
-        cluster_score = cluster_score/27 * scipy.stats.norm(20, 5).pdf(state.step)*10
+        cluster_score = cluster_score/27 * CLUSTER_STEP_FACTOR[state.step]
 
         score = player_score + distance_score + threat_score + center_score + cluster_score*0.5 + nb_pieces_ally/14 - nb_pieces_ennemy/14
         return score
@@ -184,7 +183,8 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
-
+        print(current_state.step)
+        self.max_depth = 3 if current_state.step < 15 else 4
         players = current_state.get_players()
         if players[0].get_id() == self.id:
             self.ennemy_index = 1
