@@ -19,7 +19,7 @@ from seahorse.utils.custom_exceptions import PlayerDuplicateError
 from argparse import RawTextHelpFormatter
 
 
-def add_win(winner:PlayerAbalone, player1:PlayerAbalone, player2:PlayerAbalone, win:List[int]) -> List[int]:
+def add_win(winner:PlayerAbalone, player1:PlayerAbalone, player2:PlayerAbalone, win:List[int]) -> List[int]:    
     if winner.get_id() == player1.get_id():
         win[0] += 1
     elif winner.get_id() == player2.get_id():
@@ -222,6 +222,7 @@ if __name__=="__main__":
             player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="alien")
             total_win = add_win(current_round.get_winner()[0], player1, player2, alien_wb)
+
 
         total_classic = [classic_wb[0]+classic_bw[0], classic_wb[1]+classic_bw[1]]
         total_alien = [alien_wb[0]+alien_bw[0], alien_wb[1]+alien_bw[1]]
