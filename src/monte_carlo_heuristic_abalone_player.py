@@ -8,7 +8,7 @@ import random
 import time 
 import math
 from board_abalone import BoardAbalone
-from utils import DANGER
+from utils.utils import DANGER
 from seahorse.game.game_layout.board import Piece
 
 

@@ -11,7 +11,7 @@ import typing
 import random
 from seahorse.game.game_layout.board import Piece
 
-from utils import DANGER
+from utils.utils import DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -65,14 +65,14 @@ class MyPlayer(PlayerAbalone):
                 if board.get_env().get((i, j), -1) != -1:
                     piece:Piece = board.get_env().get((i, j))
                     if piece.get_owner_id() == next_player:
-                        distance_score_ally += (8-DANGER.get((i,j)))
+                        distance_score_ally += (11-DANGER.get((i,j)))
                         nb_pieces_ally += 1
                     else :
                         distance_score_ennemy += DANGER.get((i,j))
                         #print(f"Player piece {i},{j}")
 
         # todo: REFACTOR NORMALISATION
-        score = (distance_score_ally/(nb_pieces_ally*8))
+        score = (distance_score_ally/(nb_pieces_ally*11))
         #score += (distance_score_ennemy/(nb_pieces_ally*8))*0.5
         ennemy_pieces = board.get_pieces_player(state.get_players()[self.ennemy_id])
         own_pieces = board.get_pieces_player(state.get_next_player())

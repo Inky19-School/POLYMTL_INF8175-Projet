@@ -3,16 +3,13 @@ from board_abalone import BoardAbalone
 from player_abalone import PlayerAbalone
 from game_state_abalone import GameStateAbalone
 from seahorse.game.action import Action
-from seahorse.game.game_state import GameState
 from seahorse.game.action import Action
-from seahorse.utils.custom_exceptions import MethodNotImplementedError
 import math
 import typing
 
-import random
 from seahorse.game.game_layout.board import Piece
 
-from utils.utils import DANGER, MAX_DANGER
+from utils.utils import CLUSTER_STEP_FACTOR, DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -22,7 +19,7 @@ class MyPlayer(PlayerAbalone):
         piece_type (str): piece type of the player
     """
 
-    def __init__(self, piece_type: str, name: str = "alphabeta", time_limit: float=60*15, max_depth:int=2, *args) -> None:
+    def __init__(self, piece_type: str, name: str = "alphabeta", time_limit: float=60*15, *args) -> None:
         """
         Initialize the PlayerAbalone instance.
 
@@ -32,7 +29,7 @@ class MyPlayer(PlayerAbalone):
             time_limit (float, optional): the time limit in (s)
         """
         super().__init__(piece_type,name,time_limit,*args)
-        self.max_depth = max_depth
+        self.max_depth = 3
         self.ennemy_index = None
         self.index = None
     
@@ -46,21 +43,14 @@ class MyPlayer(PlayerAbalone):
         Returns:
             float: heuristic value
         """
-        # idées: 
-        # - distance de chaque bille au centre
-        # - billes en danger
-        # - bille adversaire en danger
-        # notes: pour être admissible, entre -6 et 6. Préférable -2 et 2 (l'adversaire va forcèment marquer des points)
         board: BoardAbalone = state.get_rep()
         score = 0
-        # current_player_pieces = board.get_pieces_player(state.get_next_player())
         next_player = self.id
-        grid = board.get_grid()
 
         distance_score_ally:int = 0
         distance_score_ennemy:int = 0
-        edge_score:int = 0
         threat_score:int = 0
+        cluster_score:int = 0
 
         step_factor:int = state.get_step() / state.max_step
 
@@ -70,42 +60,62 @@ class MyPlayer(PlayerAbalone):
         
         for i, j in itertools.product(range(dim[0]), range(dim[1])):
             in_danger:bool = False
+            on_edge:bool = False
             _piece = board.get_env().get((i, j), -1)
             if _piece == -1:
                 continue
             piece:Piece = _piece
-            is_ally = piece.get_owner_id() == next_player
 
             neighbours = board.get_neighbours(i, j)
             for _, (type, (nx, ny)) in neighbours.items():
                 if type == "EMPTY":
                     continue
                 elif type == "OUTSIDE":
-                    edge_score += -1 if is_ally else 1
-                    in_danger = True
+                    on_edge = True
                 elif board.get_env().get((nx, ny), piece).get_owner_id() != self.id:
-                    threat_score += 1
-            if (in_danger):
-                threat_score += 2
+                    in_danger = True
+                else:
+                    cluster_score += 0.5
+
+            if (in_danger and on_edge):
+                threat_score += 1
 
             if piece.get_owner_id() == next_player:
-                distance_score_ally += (MAX_DANGER-DANGER.get((i,j)))
+                distance_score_ally += DANGER.get((i,j))
                 nb_pieces_ally += 1
             else:
                 distance_score_ennemy += DANGER.get((i,j))
                 nb_pieces_ennemy += 1
+        
+        center = board.get_env().get((8, 4), -1)
+        center_score = 0
+        if center != -1:
+            center_score += 1 if center.get_owner_id() == self.id else -1
 
-        # todo: REFACTOR NORMALISATION
-        nb_pieces:int = nb_pieces_ally + nb_pieces_ennemy
+        # Base score [-6, 6]
         player_score = state.get_player_score(state.get_players()[self.index])
-        score = (distance_score_ally/(nb_pieces_ally*MAX_DANGER)) * (1-step_factor)
-        score += (distance_score_ennemy/(nb_pieces_ally*MAX_DANGER))*0.5 * (1-step_factor)
-        return score - (nb_pieces_ennemy/14)*step_factor + nb_pieces_ally/14 #+ edge_score + threat_score
-    
+        player_score = player_score/6 # [-1, 1]
+        
+        # Distance of the pieces to the center
+        distance_score_ally_normalized = (distance_score_ally - 20) / 118
+        distance_score_ennemy_normalized = (distance_score_ennemy - 20) / 118
+        # [-1, 1]
+        distance_score = distance_score_ennemy_normalized * (1-step_factor*0.25) - distance_score_ally_normalized * (1-step_factor)
+        
+        # Threat score [-1, 0]
+        threat_score = -threat_score/14 * step_factor
+
+        # Center score [-1, 1]
+        center_score = center_score if state.step < 45 else 0
+
+        # Cluster score [0, 1]
+        cluster_score = cluster_score/27 * CLUSTER_STEP_FACTOR[state.step]
+
+        score = player_score + distance_score + threat_score*0.8 + center_score + cluster_score*0.4 + ((nb_pieces_ally - nb_pieces_ennemy)/14)*(1+step_factor)
+        return score
+
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
-            # print("=========")
-            # print("JOUEUR")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
@@ -125,8 +135,6 @@ class MyPlayer(PlayerAbalone):
     
     def min_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
-            print("=========")
-            print("ADVERSAIRE")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
@@ -156,7 +164,6 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
-
         players = current_state.get_players()
         if players[0].get_id() == self.id:
             self.ennemy_index = 1
@@ -164,6 +171,10 @@ class MyPlayer(PlayerAbalone):
         else:
             self.ennemy_index = 0
             self.index = 1
+
+        self.max_depth = 3 if (current_state.step < 20 or current_state.get_players()[self.index].get_remaining_time() < 150) else 4
+        if current_state.max_step - current_state.step < 4:
+            self.max_depth = current_state.max_step - current_state.step
 
         (_, action) = self.max_value(current_state, 0, -math.inf, math.inf)
         return action

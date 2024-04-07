@@ -12,7 +12,7 @@ import typing
 import random
 from seahorse.game.game_layout.board import Piece
 
-from utils import CLUSTER_STEP_FACTOR, DANGER, MAX_DANGER
+from utils.utils import CLUSTER_STEP_FACTOR, DANGER, MAX_DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -110,8 +110,8 @@ class MyPlayer(PlayerAbalone):
         player_score = player_score/6 # [-1, 1]
         
         # Distance of the pieces to the center
-        distance_score_ally_normalized = (distance_score_ally - 20) / 104
-        distance_score_ennemy_normalized = (distance_score_ennemy - 20) / 104
+        distance_score_ally_normalized = (distance_score_ally - 20) / 118
+        distance_score_ennemy_normalized = (distance_score_ennemy - 20) / 118
         # [-1, 1]
         distance_score = (distance_score_ennemy_normalized - distance_score_ally_normalized) * (1-step_factor)
         
@@ -184,7 +184,7 @@ class MyPlayer(PlayerAbalone):
             Action: selected feasible action
         """
         print(current_state.step)
-        self.max_depth = 3 if current_state.step < 15 else 4
+        self.max_depth = 2 if current_state.step < 15 else 3
         players = current_state.get_players()
         if players[0].get_id() == self.id:
             self.ennemy_index = 1
