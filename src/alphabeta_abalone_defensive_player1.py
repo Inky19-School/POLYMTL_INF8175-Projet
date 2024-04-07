@@ -13,7 +13,7 @@ import typing
 import random
 from seahorse.game.game_layout.board import Piece
 
-from utils import DANGER, MAX_DANGER
+from utils.utils import DANGER
 
 class MyPlayer(PlayerAbalone):
     """
