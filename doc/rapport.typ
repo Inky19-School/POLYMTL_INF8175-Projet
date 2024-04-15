@@ -85,6 +85,24 @@ Par la suite nous avons ajouté une heuristique basée sur les stratégies évoq
 = Conception des agents
 
 == Heuristique <heuristic>
+
+L'heuristique finale attribue un score pour l'agent à un état de la partie en fonction des données suivantes :
+
+- Le score de base fourni par la méthode `get_player_score()` de la classe `GameState` est utilisé mais est ramené de l'intervalle $[-6, 6]$ à $[-1,1]$.
+
+- Un score des pièces présentes sur le plateau (`pieces_score`) représente l'avantage matériel d'un joueur sur un autre. Ce score soustrait le nombre de pièces adverses au nombre de pièces alliées puis est normalisé pour être compris dans l'intervalle $[-1, 1]$.
+
+- Un score nommé `center_score` évalue simplement si la case centrale appartient à un joueur. La valeur est de 1 si une bille alliée est dessus, -1 si c'est un bille adverse et 0 sinon. Au-delà du tour 45, ce score vaut toujours 0 pour pousser l'agent à ignorer le centre et prioriser les autres scores d'attaque.
+
+- Un score de danger (`threat_score`) représente le nombre de billes alliées qui sont en danger de se faire éjecter (_i.e._ qui sont sur le bord avec une bille adversaire à côté). Ce score est normalisé de sorte à être contenu dans l'intervalle $[-1, 0]$. L'importance de ce score diminue linéairement avec l'avancé du nombre de tour pour encourager l'agent à prendre des risques en fin de partie.
+
+- Un score de clustering (`cluster_score`) évalue la formation des billes alliées pour favoriser les "blobs" et éviter les billes isolées et les lignes. Ce score compte pour chaque bille alliée le nombre de voisins directs alliés. La valeur est normalisé pour être dans l'intervalle $[0,1]$. L'importance de ce score évolue selon une loi normale du nombre de tours centrée en 20 avec un écart-type de 5. Ces valeurs ont été choisi pour que l'agent ait le comportement suivant :
+  - En tout début de partie le contrôle du centre est à prioriser (quitte à avoir une mauvaise formation)
+  - En fin de première moitié de partie (vers le tour 20), l'agent se concentre à fortifier sa formation.
+  - En fin de partie, la formation n'est plus importante et l'agent doit prioriser l'attaque.
+
+- Un score de distance au centre (`distance_score`) permet d'évaluer la disposition des billes sur le plateau à l'aide d'une valeur de dangerosité (_c.f._ @danger). Cette valeur est normalisée pour être contenue dans l'intervalle $[-1, 1]$. Elle augmente plus les billes alliées sont proche du centre et les billes adverses sont proches du bord. L'importance des billes alliée dans le calcul de ce score diminue linéairement avec l'avancé du nombre de tours pour que vers la fin de partie l'agent se concentre sur pousser les billes adverses sur le bord du plateau en prenant des risques. L'importance des billes adverses diminue également légérement pour que l'agent favorise l'éjection de billes à simplement pousser le plus de billes adverses en périphérie du plateau.
+
 #box(width: 100%)[
   #set align(center)
   #figure(
@@ -93,6 +111,9 @@ Par la suite nous avons ajouté une heuristique basée sur les stratégies évoq
   ) <danger>
 ]
 
+#v(1em)
+Ces scores sont ensuite additionnés avec des pondérations pour connaître le score total de l'état. L'utilisation de pondérations a pour objectif de rapidement modifier le comportement d'un agent pour favoriser de manière générale l'attaque ou la défense.
+La somme brute (_i.e._ non pondérée) des scores est comprise dans $[-5, 5]$ ce qui assure que l'heuristique est admissible (car elle ne sort pas de l'intervalle possible de score de $[-6, 6]$). L'utilisation des pondérations entre 0 et 1 pour affiner le comportement l'agent assure également que l'heuristique reste admissible.  
 
 == Optimisations <optimizations>
 
@@ -119,8 +140,21 @@ Pour éviter de dépasser le temps maximal de 15min avec Alphabeta, le niveau de
 
 = Résultats
 == Performances
+
+Les versions finales de chaque agent (Alaphabeta et MCTS) battent l'agent greedy implémenté par défaut.
+
+Pour départager la version qui serait envoyée au tournoi, nous les avons fait s'affronter sur l'ensemble des configurations :
+
 == Tournoi
 
 Lors du tournoi, notre agent a réussi à finir 2ème de sa poule avec 2 victoires pour 1 défaite, avec un total de 37 points. Cependant, le premier round a été perdu 4-1 contre un autre agent. Bien que cette défaite soit un peu décevante, nous sommes satisfaits de la performance globale de notre agent. Le système de gestion de temps semble avoir fonctionner correctement sur le serveur de tournoi.
 
+== Limtations et évolutions possibles
+
+Malgré de bonnes performances, certaines points restent limitant notamment concernant l'heuristique :
+- Il serait possible d'identifier et favoriser certains patternes et disposition de billes particulier. Par exemple, lorsque l'adversaire forme une ligne il serait intéressant de prioriser les coups qui permettent de la casser pour séparer ses billes et l'affaiiblir.
+- L'agent est conçu pour jouer uniquement sur des parties de 50 tours. Cependant, cette limitation n'est pas présente dans les règles du jeu et n'a été ajoutée que pour simplifier le projet. Il serait intéressant de rendre l'agent capbable de jouer sur des parties de longueur variable. 
+- D'autres approches n'ont pas été explorées par manque de temps. Il pourrait par exemple être intéressant de réaliser un agent à base d'apprentissage profond et le comparer à l'Alphabeta réalisé.
+
 = Conclusion
+

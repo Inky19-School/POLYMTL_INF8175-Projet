@@ -111,7 +111,10 @@ class MyPlayer(PlayerAbalone):
         # Cluster score [0, 1]
         cluster_score = cluster_score/27 * CLUSTER_STEP_FACTOR[state.step]
 
-        score = player_score + distance_score + threat_score*0.8 + center_score + cluster_score*0.4 + ((nb_pieces_ally - nb_pieces_ennemy)/14)*(1+step_factor)
+        # Pieces score [-1, 1]
+        pieces_score = ((nb_pieces_ally - nb_pieces_ennemy)/14)*(1+step_factor)
+
+        score = player_score + distance_score + threat_score*0.8 + center_score + cluster_score*0.4 + pieces_score
         return score
 
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
