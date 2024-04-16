@@ -1,9 +1,14 @@
+#import "@preview/cetz:0.2.2"
+#import "@preview/wrap-it:0.1.0": wrap-content
+
 #set par(leading: 0.55em, justify: true)
 #set text(font: "CMU Serif")
 #show raw: set text(font: "CMU Typewriter Text")
 #show par: set block(spacing: 0.55em)
 #show heading: set block(above: 1.4em, below: 1em)
 #set page(paper: "a4")
+
+#let graph_palette = cetz.palette.new(colors: (rgb("#4198D7"), rgb("#FE9D52")))
 
 #set document(title: "Rapport de projet INF8175")
 
@@ -59,26 +64,105 @@ Le but de ce projet est de développer un agent intelligent pour le jeu Abalone.
 
 = Analyse du jeu <analysis> 
 
-Afin de développer un agent intelligent, il est d'abord nécessaire de comprendre les règles et stratégies du jeu. Nous connaissions déjà Abalone avant ce projet ce qui nous a permis de rapidement faire émerger des idées lors de nos parties :
-- Plus une bille se trouve proche d'un bord, plus elle est en danger. Les cases sur les "sommets" de l'hexagone sont d'autant plus dangereuses car une bille peut se faire éjecter depuis trois directions différentes.
-- Le centre du plateau, en particulier la case centrale, est un endroit stratégique qui permet de dominer l'adversaire en le forçant à disposer ses billes en croissant autour de la case centrale et donc de le pousser plus facilement.
-- Les formations en "blob" sont plus faciles à protéger que les billes isolées ou les formation en ligne. En effet, cette formation offire le moins de surface d'attaque et permet de riposter dans plusieurs directions.
+Afin de développer un agent intelligent, il est d'abord nécessaire de comprendre les règles et stratégies du jeu. Lors de nos parties nous avons pu identifier des points clés :
+- Plus une bille se trouve proche d'un bord, plus elle est en danger. Les "sommets" de l'hexagone sont les plus dangereux car on peut se faire éjecter depuis 3 directions.
+
+- Le centre du plateau, en particulier la case centrale, est un endroit stratégique qui permet de dominer l'adversaire en le forçant à disposer ses billes en croissant.
+
+- Les formations en "blob" sont plus faciles à protéger. En effet, cette formation offire le moins de surface d'attaque et permet de riposter dans plusieurs directions.
+
 - Il est souvent contreproductif de chercher à ramener une bille isolées dans un groupe si cela prend plus de 1 ou 2 tours.
-- Les priorités évoluent avec le temps. En début de partie, il est souvent préférable de chercher à contrôler le centre et construire une formation avec ses billes. Inversement, lors des derniers tours, il est préférable d'attaquer l'adversaire, quitte à perdre le centre ou déconstruire sa formation.
+
+- Les priorités évoluent avec le temps. En début de partie, il est préférable de contrôler le centre et de solidifer sa formation. Lors des derniers tours, il est préférable d'attaquer l'adversaire, quitte à perdre le centre ou déconstruire sa formation.
 
 = Agents développés
 
-== Alphabeta
+== Minimax avec alphabeta pruning
 
 === Description
 
-La version principale de l'agent de notre projet utilise l'algorithme alphabeta. C'est la version que nous avons utilisée pour le tournoi et la remise. 
-
-La première version de l'agent développée fut un agent minimax simple afin de tester les mécanismes du projet fourni. Nous avons ensuite rapidement implémenter l'élagage alphabeta pour améliorer les performances de l'agent et obtenir un meilleur niveau de profondeur.
-
-Par la suite nous avons ajouté une heuristique basée sur les stratégies évoquées dans #link(label("analysis"))[*Analyse du jeu*]. L'heuristique a été modifiées et améliorée au fur et à mesure de l'avancement du projet. La version finale est décrite dans la section #link(label("heuristic"))[*Heuristique*].
+La version finale de l'agent utilise l'algorithme minimax avec alphabeta pruning. L'agent utilise également une heuristique pour évaluer les états de la partie et sélectionner la meilleure action (voir #link(label("heuristic"))[*Heuristique*] pour une description de son fonctionnement). Le niveau de profondeur de l'arbre de recherche est dynamique et change en fonction de l'avancement de la partie et du temps restant (voir #link(label("optimizations"))[*Optimisations*] pour plus de détails).
 
 === Évolution
+
+La première version développée est un minimax simple (sans pruning ou heuristique) afin de tester le projet fourni. Cette version est désignée par "v0" et n'arrive pas à battre systématiquemen l'agent greedy. 
+
+Par la suite, nous avons ensuite rapidement implémenter l'élagage alphabeta afin d'améliorer les performances ainsi qu'une première heuristique basée uniquement sur le nombre de pièces et leur distance au centre. Cette version "v1" bat l'agent greedy.
+
+Nous avons ensuite réécrit une v2 pour nettoyer le code et ajouter de nouvelles statistiques à notre heuristique (voir #link(label("heuristic"))[*Heuristique*] pour la version finale). Cette version bat greedy et la v1. Enfin, pour le tournoi, nous avons affiner les coefficients de chaque composante de l'heuristique envourager l'attaque (v2.1).
+
+#v(1em)
+Les l'évolution des performances face à Greedy est illustrée @alphabeta_vs_greedy. La version finale (v2.1) a également été testée sur les agents précédents et les résultats sont illustrés @alphabeta_vs_previous.
+
+#box(width: 100%)[
+  #set align(center)
+  #let data_alphabeta = (
+    ([v0], -0.333, 0.333, 0.333),
+    ([v1], -0.833, 0.833, 3.5),
+    ([v2], -0.666, 0.666, 4.92),
+    ([v2.1], -0.5, 0.5, 5.42),
+  )
+
+  #let data_alphabeta_vs = (
+    ([v0], 0, 0, 1.42),
+    ([v1], -0.167, 0.167, 0.5),
+    ([v2], -0.25, 0.25, 0.42),
+    ([], 0, 0, 0),
+  )
+
+  #grid(
+    columns: 2,
+    [#figure(
+      cetz.canvas({
+        cetz.draw.set-style(legend: (fill: white))
+        cetz.chart.barchart(mode: "stacked",
+          size: (7, 5),
+          label-key: 0,
+          value-key: (..range(1, 4)),
+          bar-width: .8,
+          x-tick-step: 1,
+          data_alphabeta,
+          bar-style:graph_palette,
+          labels: ([Agent testé], [Greedy]),
+          legend: "legend.inner-north-east",
+          x-min: -2,
+          x-max: 6,
+        )
+      }),
+      caption: [Nombre de points moyen par\ partie de l'agent contre Greedy.] 
+    ) <alphabeta_vs_greedy>],
+
+    [#figure(
+    cetz.canvas({
+      cetz.draw.set-style(legend: (fill: white))
+      cetz.chart.barchart(mode: "stacked",
+        size: (5, 5),
+        label-key: 0,
+        value-key: (..range(1, 4)),
+        bar-width: .8,
+        x-tick-step: 1,
+        data_alphabeta_vs,
+        bar-style:graph_palette,
+        labels: ([Agent testé], [v2.1]),
+        legend: "legend.inner-south",
+        legend-style: (offset: (0,0.4)),
+        x-min: -1,
+        x-max: 2,
+      )
+    }),
+    caption: [Nombre de points moyen par\ partie de l'agent contre la v2.1]
+    ) <alphabeta_vs_previous>]
+  )
+]
+
+#box(width: 100%)[
+  #set align(center)
+  
+
+  
+]
+
+
 
 == Monte Carlo Tree Search
 
@@ -101,15 +185,22 @@ L'heuristique finale attribue un score pour l'agent à un état de la partie en 
   - En fin de première moitié de partie (vers le tour 20), l'agent se concentre à fortifier sa formation.
   - En fin de partie, la formation n'est plus importante et l'agent doit prioriser l'attaque.
 
-- Un score de distance au centre (`distance_score`) permet d'évaluer la disposition des billes sur le plateau à l'aide d'une valeur de dangerosité (_c.f._ @danger). Cette valeur est normalisée pour être contenue dans l'intervalle $[-1, 1]$. Elle augmente plus les billes alliées sont proche du centre et les billes adverses sont proches du bord. L'importance des billes alliée dans le calcul de ce score diminue linéairement avec l'avancé du nombre de tours pour que vers la fin de partie l'agent se concentre sur pousser les billes adverses sur le bord du plateau en prenant des risques. L'importance des billes adverses diminue également légérement pour que l'agent favorise l'éjection de billes à simplement pousser le plus de billes adverses en périphérie du plateau.
 
-#box(width: 100%)[
-  #set align(center)
-  #figure(
-    image("assets/abalone_grid_danger.svg", width: 50%),
-    caption: "Représentation de la dangerosité des cases du plateau"
-  ) <danger>
-]
+#let fig = [#figure(
+    image("assets/abalone_grid_danger.svg", width: 10.5em),
+    caption: [Dangerosité \ des cases du plateau]
+  ) <danger>]
+
+#let body = [
+  Un score de distance au centre (`distance_score`) permet d'évaluer la disposition des billes à l'aide d'une valeur de dangerosité (_c.f._ @danger). Ce score est contenu dans $[-1, 1]$ et augmente plus les billes alliées sont proche du centre et les billes adverses sont proches du bord. L'importance des billes alliée dans le calcul diminue linéairement avec le nombre de tours pour que vers la fin  l'agent prenne plus de risques. L'importance des billes adverses diminue aussi légérement pour favoriser le éjections plutôt que de pousser le plus de billes adverses en périphérie du plateau.]
+
+#set par(justify: true)
+- #wrap-content(
+  fig,
+  body,
+  align: top + right,
+  column-gutter: 2em
+)
 
 #v(1em)
 Ces scores sont ensuite additionnés avec des pondérations pour connaître le score total de l'état. L'utilisation de pondérations a pour objectif de rapidement modifier le comportement d'un agent pour favoriser de manière générale l'attaque ou la défense.
@@ -139,11 +230,13 @@ Pour éviter de dépasser le temps maximal de 15min avec Alphabeta, le niveau de
 - Lors des 3 derniers tours, la profondeur est fixée au nombre de tours restants afin d'éviter de calculer des coups inutiles.
 
 = Résultats
-== Performances
+== Choix de l'agent <choice>
 
 Les versions finales de chaque agent (Alaphabeta et MCTS) battent l'agent greedy implémenté par défaut.
 
-Pour départager la version qui serait envoyée au tournoi, nous les avons fait s'affronter sur l'ensemble des configurations :
+Pour départager quelle version envoyer au tournoi, nous les avons fait s'affronter sur l'ensemble des configurations. Au total nous avons réalisé 12 parties avec 3 parties par configuration.
+
+Dans toutes les parties, l'agent Alphabeta a gagné contre l'agent MCTS avec 6 billes MCTS éjectées avant la fin de la partie et aucune bille Alphabeta éjectée. L'agent Alphabeta a donc été choisi comme version finale.
 
 == Tournoi
 

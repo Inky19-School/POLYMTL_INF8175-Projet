@@ -56,9 +56,9 @@ class MyPlayer(PlayerAbalone):
         if kwargs:
             pass
 
-        T = 5 * 60
+        T = 12 * 60
         time_accorded = (1.5/65 if current_state.get_step() <= 30 else 1/65) * T * 2
-        print("Time accorded : ",time_accorded)
+        #print("Time accorded : ",time_accorded)
 
         return self.MCTS(current_state=current_state,time_accorded=time_accorded)
 
@@ -168,7 +168,7 @@ class MyPlayer(PlayerAbalone):
         n_leaf = Node(state = current_state, player = current_state.get_next_player().get_id())
         current_player = current_state.get_next_player().get_id()
         time_at_beginning = time.time()
-        print("The current player is ", current_player)
+        #print("The current player is ", current_player)
         iteration = 0
         while time.time() <= time_at_beginning + time_accorded:
             
@@ -209,12 +209,12 @@ class MyPlayer(PlayerAbalone):
             n_leaf.visits += 1
             n_leaf.wins += n_child.wins
             
-        print(n_leaf.wins)
+        #print(n_leaf.wins)
         w = 0
         for child in n_leaf.childNodes:
-            print(child.wins,child.visits)
+            #print(child.wins,child.visits)
             w += child.wins
-        print(w)
+        #print(w)
         return sorted(n_leaf.childNodes,key = lambda c : c.visits)[-1].move
             
             
