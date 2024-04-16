@@ -1,0 +1,20 @@
+Running AB-MCTS
+Match 1
+Total wins:  [4, 0]
+Classic wb  -  wins:[1, 0]   scores:[0, -6]
+Classic bw  -  wins:[1, 0]   scores:[0, -6]
+Alien wb    -  wins:[1, 0]     scores:[0, -6]
+Alien bw    -  wins:[1, 0]     scores:[0, -6]
+Match 2
+Total wins:  [4, 0]
+Classic wb  -  wins:[1, 0]   scores:[0, -6]
+Classic bw  -  wins:[1, 0]   scores:[0, -6]
+Alien wb    -  wins:[1, 0]     scores:[0, -6]
+Alien bw    -  wins:[1, 0]     scores:[0, -6]
+Match 3
+Total wins:  [4, 0]
+Classic wb  -  wins:[1, 0]   scores:[0, -6]
+Classic bw  -  wins:[1, 0]   scores:[0, -6]
+Alien wb    -  wins:[1, 0]     scores:[0, -6]
+Alien bw    -  wins:[1, 0]     scores:[0, -6]
+Done

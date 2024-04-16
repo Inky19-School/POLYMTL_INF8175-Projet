@@ -12,7 +12,7 @@ import typing
 import random
 from seahorse.game.game_layout.board import Piece
 
-from utils.utils import CLUSTER_STEP_FACTOR, DANGER, MAX_DANGER
+from utils.utils import CLUSTER_STEP_FACTOR, DANGER
 
 class MyPlayer(PlayerAbalone):
     """
@@ -131,8 +131,6 @@ class MyPlayer(PlayerAbalone):
     
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
-            # print("=========")
-            # print("JOUEUR")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
@@ -152,8 +150,6 @@ class MyPlayer(PlayerAbalone):
     
     def min_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
-            print("=========")
-            print("ADVERSAIRE")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
@@ -183,7 +179,6 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
-        print(current_state.step)
         self.max_depth = 2 if current_state.step < 15 else 3
         players = current_state.get_players()
         if players[0].get_id() == self.id:

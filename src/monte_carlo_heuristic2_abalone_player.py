@@ -8,9 +8,8 @@ import random
 import time 
 import math
 from board_abalone import BoardAbalone
-from utils.utils import DANGER
+from utils.utils import DANGER, CLUSTER_STEP_FACTOR
 from seahorse.game.game_layout.board import Piece
-import scipy
 import itertools
 
 
@@ -57,9 +56,9 @@ class MyPlayer(PlayerAbalone):
         if kwargs:
             pass
 
-        T = 10 * 60
+        T = 12 * 60
         time_accorded = (1.5/65 if current_state.get_step() <= 30 else 1/65) * T * 2
-        print("Time accorded : ",time_accorded)
+        #print("Time accorded : ",time_accorded)
 
         return self.MCTS(current_state=current_state,time_accorded=time_accorded)
 
@@ -150,7 +149,7 @@ class MyPlayer(PlayerAbalone):
         center_score = center_score if state.step < 45 else 0
 
         # Cluster score [0, 1]
-        cluster_score = cluster_score/27 * scipy.stats.norm(20, 5).pdf(state.step)*10
+        cluster_score = cluster_score/27 * CLUSTER_STEP_FACTOR[state.step]
 
         score = player_score + distance_score + threat_score + center_score + cluster_score*0.5 + nb_pieces_ally/14 - nb_pieces_ennemy/14
         return score
@@ -169,7 +168,7 @@ class MyPlayer(PlayerAbalone):
         n_leaf = Node(state = current_state, player = current_state.get_next_player().get_id())
         current_player = current_state.get_next_player().get_id()
         time_at_beginning = time.time()
-        print("The current player is ", current_player)
+        #print("The current player is ", current_player)
         iteration = 0
         while time.time() <= time_at_beginning + time_accorded:
             
@@ -210,12 +209,12 @@ class MyPlayer(PlayerAbalone):
             n_leaf.visits += 1
             n_leaf.wins += n_child.wins
             
-        print(n_leaf.wins)
+        #print(n_leaf.wins)
         w = 0
         for child in n_leaf.childNodes:
-            print(child.wins,child.visits)
+            #print(child.wins,child.visits)
             w += child.wins
-        print(w)
+        #print(w)
         return sorted(n_leaf.childNodes,key = lambda c : c.visits)[-1].move
             
             

@@ -175,7 +175,7 @@ class MyPlayer(PlayerAbalone):
             self.ennemy_index = 0
             self.index = 1
 
-        self.max_depth = 3 if (current_state.step < 20 or current_state.get_players()[self.index].get_remaining_time() < 150) else 4
+        self.max_depth = 2 if (current_state.step < 20 or current_state.get_players()[self.index].get_remaining_time() < 150) else 3
         if current_state.max_step - current_state.step < 4:
             self.max_depth = current_state.max_step - current_state.step
 
