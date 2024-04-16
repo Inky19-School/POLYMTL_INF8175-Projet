@@ -17,7 +17,7 @@ class MyPlayer(PlayerAbalone):
         piece_type (str): piece type of the player
     """
 
-    def __init__(self, piece_type: str, name: str = "minimax", time_limit: float=60*15, max_depth:int=2, *args) -> None:
+    def __init__(self, piece_type: str, name: str = "minimax", time_limit: float=60*15, max_depth:int=3, *args) -> None:
         """
         Initialize the PlayerAbalone instance.
 

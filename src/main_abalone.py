@@ -26,6 +26,10 @@ def add_win(winner:PlayerAbalone, player1:PlayerAbalone, player2:PlayerAbalone, 
         win[1] += 1
     return win
 
+def add_scores(total_score:List[int], scores:dict[int, float] , player1:PlayerAbalone, player2:PlayerAbalone) -> None:
+    total_score[0] += scores[player1.get_id()]
+    total_score[1] += scores[player2.get_id()]
+
 def play(player1, player2, log_level, port, address, gui, record, gui_path, config) :
     list_players = [player1, player2]
     init_scores = {player1.get_id(): 0, player2.get_id(): 0}
@@ -202,32 +206,46 @@ if __name__=="__main__":
         alien_wb = [0,0]
         alien_bw = [0,0]
 
+        classic_wb_scores = [0,0]
+        classic_bw_scores = [0,0]
+        alien_wb_scores = [0,0]
+        alien_bw_scores = [0,0]
+
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("W", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("B", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="classic")
+            add_scores(classic_wb_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, classic_wb)
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("B", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="classic")
+            add_scores(classic_bw_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, classic_bw)
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("W", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("B", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="alien")
+            add_scores(alien_wb_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, alien_bw)
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("B", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="alien")
+            add_scores(alien_bw_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, alien_wb)
 
 
         total_classic = [classic_wb[0]+classic_bw[0], classic_wb[1]+classic_bw[1]]
         total_alien = [alien_wb[0]+alien_bw[0], alien_wb[1]+alien_bw[1]]
         total_win = [total_classic[0]+total_alien[0], total_classic[1]+total_alien[1]]
-        print("Total wins are ", total_win)
+        print("Total wins: ", total_win)
+        print(f"Classic wb  -  wins:{classic_wb}   scores:{classic_wb_scores}")
+        print(f"Classic bw  -  wins:{classic_bw}   scores:{classic_bw_scores}")
+        print(f"Alien wb    -  wins:{alien_wb}     scores:{alien_wb_scores}")
+        print(f"Alien bw    -  wins:{alien_bw}     scores:{alien_bw_scores}")
+
         script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
         files=os.listdir(script_directory)
         for file in files:

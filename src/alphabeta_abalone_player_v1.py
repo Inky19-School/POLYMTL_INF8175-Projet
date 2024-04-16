@@ -54,7 +54,6 @@ class MyPlayer(PlayerAbalone):
         # current_player_pieces = board.get_pieces_player(state.get_next_player())
         next_player = self.id
         grid = board.get_grid()
-        # print(state.get_next_player().name)
 
         distance_score_ally = 0
         distance_score_ennemy = 0
@@ -69,7 +68,6 @@ class MyPlayer(PlayerAbalone):
                         nb_pieces_ally += 1
                     else :
                         distance_score_ennemy += DANGER.get((i,j))
-                        #print(f"Player piece {i},{j}")
 
         # todo: REFACTOR NORMALISATION
         score = (distance_score_ally/(nb_pieces_ally*11))
@@ -80,8 +78,6 @@ class MyPlayer(PlayerAbalone):
     
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
-            # print("=========")
-            # print("JOUEUR")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
@@ -101,8 +97,6 @@ class MyPlayer(PlayerAbalone):
     
     def min_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
-            print("=========")
-            print("ADVERSAIRE")
             return (self.heuristic(state), None)
         moves = state.get_possible_actions()
         
@@ -132,8 +126,6 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
-        print("BEGIN")
-        print(current_state.get_next_player().name)
 
         players = current_state.get_players()
         if players[0].get_id() == self.id:
