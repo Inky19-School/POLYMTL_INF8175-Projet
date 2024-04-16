@@ -82,6 +82,20 @@ Par la suite nous avons ajouté une heuristique basée sur les stratégies évoq
 
 == Monte Carlo Tree Search
 
+=== Description
+
+Nous avons également développé un agent qui se base sur l'algorithme Monte Carlo Tree Search (MCTS). Ce n'est pas l'agent que nous avons retenu pour le tournoi et la remise.
+
+l'algorithme du MCTS se base sur des observations statistiques pour déterminer le meilleur coup à effectuer. Il se décompose en 4 phases : sélection, extension, simulation et backpropagation. Nous utilisons le upper confident bound applied to trees (UCT) comme règle de sélection. 
+
+Lors de la phase de simulation, nous avons d'abord utiliser une approche complétement aléatoire. En effet, nous avons simulé des parties où les coups étaient décidés aléatoirement, et quant l'agent gagnait, on remontait sa victoire.
+
+Par la suite, pour éviter de simuler des parties aléatoires, et perdre du temps à aller jusqu'à la fin des parties simulées, nous avons implémenter une heuristique, décrite dans la section #link(label("heuristic"))[*Heuristique*].
+
+=== Évolution
+
+
+
 = Conception des agents
 
 == Heuristique <heuristic>
