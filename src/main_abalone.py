@@ -211,24 +211,28 @@ if __name__=="__main__":
         alien_wb_scores = [0,0]
         alien_bw_scores = [0,0]
 
+        print("loop 1")
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("W", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("B", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="classic")
             add_scores(classic_wb_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, classic_wb)
+        print("loop 2")
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("B", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="classic")
             add_scores(classic_bw_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, classic_bw)
+        print("loop 3")
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("W", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("B", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)
             current_round = play(player1=player1, player2=player2, log_level="CRITICAL", port=port, address=address, gui=False, record=record, gui_path=gui_path, config="alien")
             add_scores(alien_wb_scores, current_round.get_scores(), player1, player2)
             total_win = add_win(current_round.get_winner()[0], player1, player2, alien_bw)
+        print("loop 4")
         for i in range(n_loop):
             player1 = player1_class.MyPlayer("B", name=splitext("r_"+basename(list_players[0]))[0]+"_1", time_limit=time_limit)
             player2 = player2_class.MyPlayer("W", name=splitext("r_"+basename(list_players[1]))[0]+"_2", time_limit=time_limit)

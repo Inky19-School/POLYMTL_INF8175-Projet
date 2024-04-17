@@ -155,30 +155,91 @@ Les l'évolution des performances face à Greedy est illustrée @alphabeta_vs_gr
   )
 ]
 
-#box(width: 100%)[
-  #set align(center)
-  
-
-  
-]
-
-
-
 == Monte Carlo Tree Search
 
 === Description
 
 Nous avons également développé un agent qui se base sur l'algorithme Monte Carlo Tree Search (MCTS). Ce n'est pas l'agent que nous avons retenu pour le tournoi et la remise.
 
-l'algorithme du MCTS se base sur des observations statistiques pour déterminer le meilleur coup à effectuer. Il se décompose en 4 phases : sélection, extension, simulation et backpropagation. Nous utilisons le upper confident bound applied to trees (UCT) comme règle de sélection. 
+l'algorithme du MCTS se base sur des observations statistiques pour déterminer le meilleur coup à effectuer. Il se décompose en 4 phases : sélection, extension, simulation et backpropagation. Nous utilisons le upper confident bound applied to trees (UCT) comme règle de sélection avec comme paramètre $c = sqrt(2)$. 
 
-Lors de la phase de simulation, nous avons d'abord utiliser une approche complétement aléatoire. En effet, nous avons simulé des parties où les coups étaient décidés aléatoirement, et quant l'agent gagnait, on remontait sa victoire.
+Le temps de simulation entre chaque coup est déterminé à l'avance. Nous avons d'abord mis un temps fixe, puis un temps variable.
 
-Par la suite, pour éviter de simuler des parties aléatoires, et perdre du temps à aller jusqu'à la fin des parties simulées, nous avons implémenter une heuristique, décrite dans la section #link(label("heuristic"))[*Heuristique*].
+Nous avons développé une partie où les simulations sont aléatoires, puis une version avec heuristique, décrite dans la section #link(label("heuristic"))[*Heuristique*].
 
 === Évolution
 
+Pour la première version de notre agent nous avons d'abord utiliser une approche complétement aléatoire. En effet, nous avons simulé des parties où les coups étaient décidés aléatoirement, et quant l'agent gagnait, on remontait sa victoire. Nous avons laissé également 5 secondes simulation par tour. Il s'agit de "v0".
 
+Par la suite, nous avons utilisé le même agent, mais où le temps est variable, c'est à dire que le temps suit une loi normale centré au coup 20, de sorte que la partie dure 15 minutes. Il s'agit de "v0.1".
+
+Nous avons ensuite implémenter une première heuristique. Le temps reste variable. Il s'agit de "v1".
+
+Nous avons finalement affiner nos coefficents de notre heuristique pour avoir la version finale de notre agent MCTS. Il s'agit de "v1.1".
+
+
+Par la suite, pour éviter de simuler des parties aléatoires, et perdre du temps à aller jusqu'à la fin des parties simulées, nous avons implémenter une heuristique.
+
+#box(width: 100%)[
+  #set align(center)
+  #let data_MCTS = (
+    ([v0], 1,-1,-3),
+    ([v1.1], 1, -1, -2),
+    ([v1], -0.666, 0.666, 4.92),
+    ([v1.1], -0.5, 0.5, 5.42),
+  )
+
+  #let data_MCTS_vs = (
+    ([v0], 0, 0, 1.42),
+    ([v0.1], -0.167, 0.167, 0.5),
+    ([v1], -0.25, 0.25, 0.42),
+    ([], 0, 0, 0),
+  )
+
+  #grid(
+    columns: 2,
+    [#figure(
+      cetz.canvas({
+        cetz.draw.set-style(legend: (fill: white))
+        cetz.chart.barchart(mode: "stacked",
+          size: (7, 5),
+          label-key: 0,
+          value-key: (..range(1, 4)),
+          bar-width: .8,
+          x-tick-step: 1,
+          data_MCTS,
+          bar-style:graph_palette,
+          labels: ([Agent testé], [Greedy]),
+          legend: "legend.inner-north-east",
+          x-min: -4,
+          x-max: 4,
+        )
+      }),
+      caption: [Nombre de points moyen par\ partie de l'agent contre Greedy.] 
+    ) <MCTS_vs_greedy>],
+
+    [#figure(
+    cetz.canvas({
+      cetz.draw.set-style(legend: (fill: white))
+      cetz.chart.barchart(mode: "stacked",
+        size: (5, 5),
+        label-key: 0,
+        value-key: (..range(1, 4)),
+        bar-width: .8,
+        x-tick-step: 1,
+        data_MCTS_vs,
+        bar-style:graph_palette,
+        labels: ([Agent testé], [v2.1]),
+        legend: "legend.inner-south",
+        legend-style: (offset: (0,0.4)),
+        x-min: -1,
+        x-max: 2,
+      )
+    }),
+    caption: [Nombre de points moyen par\ partie de l'agent contre la v1.1]
+    ) <MCTS_vs_previous>]
+  )
+]
 
 = Conception des agents
 
