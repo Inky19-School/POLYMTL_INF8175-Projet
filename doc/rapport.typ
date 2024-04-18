@@ -104,9 +104,9 @@ Les l'évolution des performances face à Greedy est illustrée @alphabeta_vs_gr
   )
 
   #let data_alphabeta_vs = (
-    ([v0], 0, 0, 1.42),
-    ([v1], -0.167, 0.167, 0.5),
-    ([v2], -0.25, 0.25, 0.42),
+    ([v0], -1.42, 1.42, 0),
+    ([v1], -0.5, 0.5, 0.167),
+    ([v2], -0.42, 0.42, 0.25),
     ([], 0, 0, 0),
   )
 
@@ -146,8 +146,8 @@ Les l'évolution des performances face à Greedy est illustrée @alphabeta_vs_gr
         labels: ([Agent testé], [v2.1]),
         legend: "legend.inner-south",
         legend-style: (offset: (0,0.4)),
-        x-min: -1,
-        x-max: 2,
+        x-min: -2,
+        x-max: 1,
       )
     }),
     caption: [Nombre de points moyen par\ partie de l'agent contre la v2.1]
@@ -161,7 +161,7 @@ Les l'évolution des performances face à Greedy est illustrée @alphabeta_vs_gr
 
 Nous avons également développé un agent qui se base sur l'algorithme Monte Carlo Tree Search (MCTS). Ce n'est pas l'agent que nous avons retenu pour le tournoi et la remise.
 
-l'algorithme du MCTS se base sur des observations statistiques pour déterminer le meilleur coup à effectuer. Il se décompose en 4 phases : sélection, extension, simulation et backpropagation. Nous utilisons le upper confident bound applied to trees (UCT) comme règle de sélection avec comme paramètre $c = sqrt(2)$. 
+L'algorithme du MCTS se base sur des observations statistiques pour déterminer le meilleur coup à effectuer. Il se décompose en 4 phases : sélection, extension, simulation et backpropagation. Nous utilisons le _upper confident bound applied to trees_ (UCT) comme règle de sélection avec comme paramètre $c = sqrt(2)$. 
 
 Le temps de simulation entre chaque coup est déterminé à l'avance. Nous avons d'abord mis un temps fixe, puis un temps variable.
 
@@ -323,4 +323,4 @@ Malgré de bonnes performances, certaines points restent limitant notamment conc
 
 = Conclusion
 
-Ce projet nous a permis d'explorer, de comprendre et d'expérimenter plusieurs méthodes et algorithmes d'intelligence artificielle appliqués au jeu Abalone. La grande liberté d'implémentation nous a autorisé à étudier, examiner et tester en profondeur les techniques de minimax et de MCTS. Bien que notre agent final montre des performances prometteuses, d'autres techniques plus avancées existent, et restent à être explorées. Ce projet constitue un étape importante dans notre compréhension des applications pratiques de l'IA.   
+Ce projet nous a permis d'explorer, de comprendre et d'expérimenter plusieurs méthodes et algorithmes d'intelligence artificielle appliqués au jeu Abalone. La grande liberté d'implémentation nous a permis d'étudier, examiner et tester en profondeur les techniques de minimax et de MCTS. Bien que notre agent final montre des performances prometteuses, d'autres techniques plus avancées existent, et restent à être explorées. Ce projet constitue un étape importante dans notre compréhension des applications pratiques de l'IA.   
