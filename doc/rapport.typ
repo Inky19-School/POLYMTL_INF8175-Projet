@@ -180,16 +180,16 @@ Nous avons finalement affiner nos coefficents de notre heuristique pour avoir la
 #box(width: 100%)[
   #set align(center)
   #let data_MCTS = (
-    ([v0], 1,-1,-3),
-    ([v1.1], 1, -1, -2),
-    ([v1], -0.666, 0.666, 2),
-    ([v1.1], -1, 1, 3.33),
+    ([v0], -1.33,1.33,0.66),
+    ([v1.1], -1.33, 1.33, 1.33),
+    ([v1], -0.666, 0.666, 3.33),
+    ([v1.1], -0.33, 0.33, 4.66),
   )
 
   #let data_MCTS_vs = (
-    ([v0], 0, 0, 0.76),
-    ([v0.1], -0.3, 0.3, 0.5),
-    ([v1], -0.4, 0.4, 0.42),
+    ([v0], -1.3, 1.3, 0.11),
+    ([v0.1], -1.2, 1.2, 0.33),
+    ([v1], -0.77, 0.77, 0.66),
     ([], 0, 0, 0),
   )
 
@@ -208,8 +208,8 @@ Nous avons finalement affiner nos coefficents de notre heuristique pour avoir la
           bar-style:graph_palette,
           labels: ([Agent testé], [Greedy]),
           legend: "legend.inner-north-east",
-          x-min: -4,
-          x-max: 4,
+          x-min: -2,
+          x-max: 6,
         )
       }),
       caption: [Nombre de points moyen par\ partie de l'agent contre Greedy.] 
@@ -229,7 +229,7 @@ Nous avons finalement affiner nos coefficents de notre heuristique pour avoir la
         labels: ([Agent testé], [v1.1]),
         legend: "legend.inner-south",
         legend-style: (offset: (0,0.4)),
-        x-min: -1,
+        x-min: -2,
         x-max: 1,
       )
     }),
