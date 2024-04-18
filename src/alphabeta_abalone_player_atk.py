@@ -30,6 +30,8 @@ class MyPlayer(PlayerAbalone):
         """
         super().__init__(piece_type,name,time_limit,*args)
         self.max_depth = 3
+
+        # Indexes of the players in GameState.get_players()
         self.ennemy_index = None
         self.index = None
     
@@ -45,21 +47,25 @@ class MyPlayer(PlayerAbalone):
         """
         board: BoardAbalone = state.get_rep()
         score = 0
-        next_player = self.id
 
-        distance_score_ally:int = 0
-        distance_score_ennemy:int = 0
-        threat_score:int = 0
-        cluster_score:int = 0
+        # Scores used to compute the global score
+        distance_score_ally:int = 0 # Distance of the ally pieces to the center
+        distance_score_ennemy:int = 0 # Distance of the ennemy pieces to the center
+        threat_score:int = 0 # Represents the number of ally pieces in danger of being ejected
+        cluster_score:int = 0 # Represents if the allied pieces are grouped or not
 
+        # Normalized progress of the game
         step_factor:int = state.get_step() / state.max_step
 
         dim:list[int] = board.get_dimensions()
+
+        # Number of pieces of each player
         nb_pieces_ally:int = 0
         nb_pieces_ennemy:int = 0
         
+        # Analyze the board
         for i, j in itertools.product(range(dim[0]), range(dim[1])):
-            in_danger:bool = False
+            in_danger:bool = False # True if an ennemy piece is in the neighborhood
             on_edge:bool = False
             _piece = board.get_env().get((i, j), -1)
             if _piece == -1:
@@ -72,27 +78,30 @@ class MyPlayer(PlayerAbalone):
                     continue
                 elif type == "OUTSIDE":
                     on_edge = True
-                elif board.get_env().get((nx, ny), piece).get_owner_id() != self.id:
-                    in_danger = True
-                else:
-                    cluster_score += 0.5
-
+                elif piece.get_owner_id() == self.id:
+                    if board.get_env().get((nx, ny), piece).get_owner_id() != self.id:
+                        in_danger = True
+                    else:
+                        cluster_score += 0.5 # Another allied piece in the neighborhood, which indicates a possible cluster
+            
+            # Threat score: if an ally piece ce be ejected
             if (in_danger and on_edge):
                 threat_score += 1
 
-            if piece.get_owner_id() == next_player:
+            if piece.get_owner_id() == self.id:
                 distance_score_ally += DANGER.get((i,j))
                 nb_pieces_ally += 1
             else:
                 distance_score_ennemy += DANGER.get((i,j))
                 nb_pieces_ennemy += 1
         
+        # Center control
         center = board.get_env().get((8, 4), -1)
         center_score = 0
         if center != -1:
             center_score += 1 if center.get_owner_id() == self.id else -1
 
-        # Base score [-6, 6]
+        # Base score
         player_score = state.get_player_score(state.get_players()[self.index])
         player_score = player_score/6 # [-1, 1]
         
@@ -117,6 +126,7 @@ class MyPlayer(PlayerAbalone):
         score = player_score + distance_score + threat_score*0.8 + center_score + cluster_score*0.4 + pieces_score
         return score
 
+    # Alpha-Beta Pruning
     def max_value(self, state:GameStateAbalone, depth:int, alpha, beta) -> typing.Tuple[float, Action]:
         if state.is_done() or depth >= self.max_depth:
             return (self.heuristic(state), None)
@@ -167,6 +177,7 @@ class MyPlayer(PlayerAbalone):
         Returns:
             Action: selected feasible action
         """
+        # Save the indexes of the players
         players = current_state.get_players()
         if players[0].get_id() == self.id:
             self.ennemy_index = 1
@@ -175,6 +186,10 @@ class MyPlayer(PlayerAbalone):
             self.ennemy_index = 0
             self.index = 1
 
+        # Set the max depth of the search.
+        # The value is 3 for the first 20 steps as the agent is only focused on controlling the center.
+        # After the 20th step, the depth is incremented to 4.
+        # If the remaining time is less than 2min30, the depth falls to 3 to avoid timeout.
         self.max_depth = 2 if (current_state.step < 20 or current_state.get_players()[self.index].get_remaining_time() < 150) else 3
         if current_state.max_step - current_state.step < 4:
             self.max_depth = current_state.max_step - current_state.step

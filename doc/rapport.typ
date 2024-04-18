@@ -163,6 +163,8 @@ L'évolution des performances face à _Greedy_ est illustrée @alphabeta_vs_gree
     ) <alphabeta_vs_previous>]
   )
 ]
+#v(1em)
+Les points moyens sont calculés sur 12 matchs avec 3 parties par configuration.
 
 == Monte Carlo Tree Search
 
@@ -185,6 +187,7 @@ Par la suite, nous avons utilisé le même agent, mais avec un temps variable, c
 Nous avons ensuite implémenté une première heuristique. Le temps reste variable. Il s'agit de "v1".
 Enfin nous avons affiné nos coefficents de notre heuristique pour avoir la version finale de notre agent MCTS. Il s'agit de "v1.1".
 
+#v(1em)
 #box(width: 100%)[
   #set align(center)
   #let data_MCTS = (
@@ -260,7 +263,7 @@ L'heuristique finale attribue un score pour l'agent à un état de la partie en 
 
 - Un score nommé `center_score` évalue simplement si la case centrale appartient à un joueur. La valeur est de 1 si une bille alliée est dessus, -1 si c'est un bille adverse et 0 sinon. Au-delà du tour 45, ce score vaut toujours 0 pour pousser l'agent à ignorer le centre et prioriser les autres scores d'attaque.
 
-- Un score de danger (`threat_score`) représente le nombre de billes alliées qui sont en danger de se faire éjecter (_i.e._ qui sont sur le bord avec une bille adversaire à côté). Ce score est normalisé de sorte à être contenu dans l'intervalle $[-1, 0]$. L'importance de ce score diminue linéairement avec l'avancé du nombre de tour pour encourager l'agent à prendre des risques en fin de partie.
+- Un score de danger (`threat_score`) représente le nombre de billes alliées qui sont en danger de se faire éjecter (_i.e._ qui sont sur le bord avec une bille adversaire à côté). Ce score est normalisé de sorte à être contenu dans l'intervalle $[-1, 0]$. 
 
 - Un score de clustering (`cluster_score`) évalue la formation des billes alliées pour favoriser les "blobs" et éviter les billes isolées et les lignes. Ce score compte pour chaque bille alliée le nombre de voisins directs alliés. La valeur est normalisée pour être dans l'intervalle $[0,1]$. L'importance de ce score évolue selon une loi normale du nombre de tours centrée en 20 avec un écart-type de 5. Ces valeurs ont été choisies pour que l'agent ait le comportement suivant :
   - En tout début de partie le contrôle du centre est à prioriser (quitte à avoir une mauvaise formation)
@@ -285,7 +288,7 @@ L'heuristique finale attribue un score pour l'agent à un état de la partie en 
 )
 
 Ces scores sont ensuite additionnés avec des pondérations pour connaître le score total de l'état. L'utilisation de pondérations a pour objectif de rapidement modifier le comportement d'un agent pour favoriser de manière générale l'attaque ou la défense.
-La somme brute (_i.e._ non pondérée) des scores est comprise dans $[-5, 5]$ ce qui assure que l'heuristique est admissible (car elle ne sort pas de l'intervalle possible de score de $[-6, 6]$). L'utilisation des pondérations entre 0 et 1 pour affiner le comportement l'agent assure également que l'heuristique reste admissible.  
+La somme brute (_i.e._ non pondérée) des scores est comprise dans $[-6, 6]$ ce qui assure que l'heuristique est admissible (car elle ne sort pas de l'intervalle possible de score de $[-6, 6]$). L'utilisation des pondérations entre 0 et 1 pour affiner le comportement l'agent assure également que l'heuristique reste admissible.  
 
 == Optimisations <optimizations>
 
