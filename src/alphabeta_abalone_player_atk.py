@@ -1,3 +1,6 @@
+# François GOYBET (2307249)
+# François MARIE (2309736)
+
 import itertools
 from board_abalone import BoardAbalone
 from player_abalone import PlayerAbalone
