@@ -169,30 +169,27 @@ Nous avons développé une partie où les simulations sont aléatoires, puis une
 
 === Évolution
 
-Pour la première version de notre agent nous avons d'abord utiliser une approche complétement aléatoire. En effet, nous avons simulé des parties où les coups étaient décidés aléatoirement, et quant l'agent gagnait, on remontait sa victoire. Nous avons laissé également 5 secondes simulation par tour. Il s'agit de "v0".
+Pour la première version de notre agent nous avons d'abord utiliser une approche complétement aléatoire. En effet, nous avons simulé des parties où les coups étaient décidés aléatoirement, et quand l'agent gagnait, on remontait sa victoire. Nous avons laissé également 5 secondes de simulation par tour. Il s'agit de "v0".
 
-Par la suite, nous avons utilisé le même agent, mais où le temps est variable, c'est à dire que le temps suit une loi normale centré au coup 20, de sorte que la partie dure 15 minutes. Il s'agit de "v0.1".
+Par la suite, nous avons utilisé le même agent, mais où le temps est variable, c'est à dire que le temps suit une loi normale centrée au coup 20, de sorte que l'agent prennent 15 minutes au total pour ses coups. Il s'agit de "v0.1".
 
 Nous avons ensuite implémenter une première heuristique. Le temps reste variable. Il s'agit de "v1".
 
 Nous avons finalement affiner nos coefficents de notre heuristique pour avoir la version finale de notre agent MCTS. Il s'agit de "v1.1".
-
-
-Par la suite, pour éviter de simuler des parties aléatoires, et perdre du temps à aller jusqu'à la fin des parties simulées, nous avons implémenter une heuristique.
 
 #box(width: 100%)[
   #set align(center)
   #let data_MCTS = (
     ([v0], 1,-1,-3),
     ([v1.1], 1, -1, -2),
-    ([v1], -0.666, 0.666, 4.92),
-    ([v1.1], -0.5, 0.5, 5.42),
+    ([v1], -0.666, 0.666, 2),
+    ([v1.1], -1, 1, 3.33),
   )
 
   #let data_MCTS_vs = (
-    ([v0], 0, 0, 1.42),
-    ([v0.1], -0.167, 0.167, 0.5),
-    ([v1], -0.25, 0.25, 0.42),
+    ([v0], 0, 0, 0.76),
+    ([v0.1], -0.3, 0.3, 0.5),
+    ([v1], -0.4, 0.4, 0.42),
     ([], 0, 0, 0),
   )
 
@@ -229,11 +226,11 @@ Par la suite, pour éviter de simuler des parties aléatoires, et perdre du temp
         x-tick-step: 1,
         data_MCTS_vs,
         bar-style:graph_palette,
-        labels: ([Agent testé], [v2.1]),
+        labels: ([Agent testé], [v1.1]),
         legend: "legend.inner-south",
         legend-style: (offset: (0,0.4)),
         x-min: -1,
-        x-max: 2,
+        x-max: 1,
       )
     }),
     caption: [Nombre de points moyen par\ partie de l'agent contre la v1.1]
@@ -317,7 +314,7 @@ Dans toutes les parties, l'agent Alphabeta a gagné contre l'agent MCTS avec 6 b
 
 Lors du tournoi, notre agent a réussi à finir 2ème de sa poule avec 2 victoires pour 1 défaite, avec un total de 37 points. Cependant, le premier round a été perdu 4-1 contre un autre agent. Bien que cette défaite soit un peu décevante, nous sommes satisfaits de la performance globale de notre agent. Le système de gestion de temps semble avoir fonctionner correctement sur le serveur de tournoi.
 
-== Limtations et évolutions possibles
+== Limitations et évolutions possibles
 
 Malgré de bonnes performances, certaines points restent limitant notamment concernant l'heuristique :
 - Il serait possible d'identifier et favoriser certains patternes et disposition de billes particulier. Par exemple, lorsque l'adversaire forme une ligne il serait intéressant de prioriser les coups qui permettent de la casser pour séparer ses billes et l'affaiiblir.
@@ -326,3 +323,4 @@ Malgré de bonnes performances, certaines points restent limitant notamment conc
 
 = Conclusion
 
+Ce projet nous a permis d'explorer, de comprendre et d'expérimenter plusieurs méthodes et algorithmes d'intelligence artificielle appliqués au jeu Abalone. La grande liberté d'implémentation nous a autorisé à étudier, examiner et tester en profondeur les techniques de minimax et de MCTS. Bien que notre agent final montre des performances prometteuses, d'autres techniques plus avancées existent, et restent à être explorées. Ce projet constitue un étape importante dans notre compréhension des applications pratiques de l'IA.   
