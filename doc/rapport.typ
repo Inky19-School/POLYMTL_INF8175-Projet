@@ -288,7 +288,7 @@ L'heuristique finale attribue un score pour l'agent à un état de la partie en 
 )
 
 Ces scores sont ensuite additionnés avec des pondérations pour connaître le score total de l'état. L'utilisation de pondérations a pour objectif de rapidement modifier le comportement d'un agent pour favoriser de manière générale l'attaque ou la défense.
-La somme brute (_i.e._ non pondérée) des scores est comprise dans $[-6, 6]$ ce qui assure que l'heuristique est admissible (car elle ne sort pas de l'intervalle possible de score de $[-6, 6]$). L'utilisation des pondérations entre 0 et 1 pour affiner le comportement l'agent assure également que l'heuristique reste admissible.  
+La somme brute (_i.e._ non pondérée) des scores est comprise dans $[-6, 6]$ ce qui permet de ne pas avoir de valeurs incohérentes dans l'estimation du score final. L'utilisation des pondérations entre 0 et 1 pour affiner le comportement l'agent assure également de ne pas sortir des valeurs normales du score.  
 
 == Optimisations <optimizations>
 
